@@ -11,36 +11,41 @@ function Dashboard() {
   const name = localStorage.getItem("name");
 
   useEffect(() => {
-    axios
-      .get("http://localhost:5000/exams")
-      .then((res) => setExams(res.data))
-      .catch(() => alert("Failed to load exams"));
-  }, []);
+  axios
+    .get(`${import.meta.env.VITE_API_URL}/exams`)
+    .then((res) => setExams(res.data))
+    .catch(() => alert("Failed to load exams"));
+}, []);
 
-  const startExam = (exam) => {
-    localStorage.setItem("examId", exam._id);
-    localStorage.setItem("examTitle", exam.title);
-    localStorage.setItem("examDuration", exam.duration);
+const startExam = (exam) => {
+  localStorage.setItem("examId", exam._id);
+  localStorage.setItem("examTitle", exam.title);
+  localStorage.setItem("examDuration", exam.duration);
 
-    navigate("/instructions");
-  };
+  navigate("/instructions");
+};
 
-  const deleteExam = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this exam?"
+
+const deleteExam = async (id) => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this exam?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    await axios.delete(
+      `${import.meta.env.VITE_API_URL}/delete-exam/${id}`
     );
 
-    if (!confirmDelete) return;
-
-    try {
-      await axios.delete(`http://localhost:5000/delete-exam/${id}`);
-
-      // remove from UI instantly
-      setExams((prev) => prev.filter((exam) => exam._id !== id));
-    } catch (error) {
-      alert("Failed to delete exam");
-    }
-  };
+    // remove from UI instantly
+    setExams((prev) =>
+      prev.filter((exam) => exam._id !== id)
+    );
+  } catch (error) {
+    alert("Failed to delete exam");
+  }
+};
 
   return (
     <div className="page-shell">

@@ -5,18 +5,18 @@ import Navbar from "../components/Navbar";
 function StudentResults() {
   const [results, setResults] = useState([]);
 
-  useEffect(() => {
-    const fetchResults = async () => {
-      try {
-        const res = await axios.get(
-          "http://localhost:5000/results",
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`
-            }
+ useEffect(() => {
+  const fetchResults = async () => {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/results`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
           }
-        );
-
+        }
+      );
+      
         const sorted = res.data.sort((a, b) => {
           const priority = {
             Suspicious: 3,

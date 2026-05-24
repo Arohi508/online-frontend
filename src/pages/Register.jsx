@@ -25,20 +25,20 @@ function Register() {
     e.preventDefault();
 
     try {
-      await axios.post(
-        "http://localhost:5000/register",
-        form
-      );
+  await axios.post(
+    `${import.meta.env.VITE_API_URL}/register`,
+    form
+  );
 
-      alert("Registration successful");
-      navigate("/login");
-    } catch (error) {
-      alert(
-        error.response?.data?.message ||
-          "Registration failed"
-      );
-    }
-  };
+  alert("Registration successful");
+  navigate("/login");
+} catch (error) {
+  alert(
+    error.response?.data?.message ||
+      "Registration failed"
+  );
+}
+};
 
   return (
     <div className="page-shell">

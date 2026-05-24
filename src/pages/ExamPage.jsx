@@ -75,80 +75,79 @@ function ExamPage() {
       }
 
       await axios.post(
-        "http://localhost:5000/save-result",
-        {
-          examId,
-          examTitle,
-          name: localStorage.getItem("name") || "Student",
-          email: "student@gmail.com",
-          score,
-          totalMarks,
-          violations,
-          violationTypes,
-          timeTaken: examDuration
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-
-      localStorage.setItem("latestScore", score);
-      localStorage.setItem("latestTotalMarks", totalMarks);
-      localStorage.setItem("latestExamTitle", examTitle);
-
-      navigate("/result");
-    } catch (error) {
-      console.log("ERROR:", error.response?.data || error.message);
-      alert(
-        error.response?.data?.message ||
-          "Submit failed. Check console."
-      );
+  `${import.meta.env.VITE_API_URL}/save-result`,
+  {
+    examId,
+    examTitle,
+    name: localStorage.getItem("name") || "Student",
+    email: "student@gmail.com",
+    score,
+    totalMarks,
+    violations,
+    violationTypes,
+    timeTaken: examDuration
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${token}`
     }
-  };
+  }
+);
 
-  const formatTime = () => {
-    const mins = Math.floor(timeLeft / 60);
-    const secs = timeLeft % 60;
-    return `${mins}:${String(secs).padStart(2, "0")}`;
-  };
+localStorage.setItem("latestScore", score);
+localStorage.setItem("latestTotalMarks", totalMarks);
+localStorage.setItem("latestExamTitle", examTitle);
 
-  useEffect(() => {
-    axios
-      .get(`http://localhost:5000/questions/${examId}`)
-      .then((res) => setQuestions(res.data));
+navigate("/result");
+} catch (error) {
+  console.log("ERROR:", error.response?.data || error.message);
+  alert(
+    error.response?.data?.message ||
+      "Submit failed. Check console."
+  );
+}
+};
 
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then((stream) => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
+const formatTime = () => {
+const mins = Math.floor(timeLeft / 60);
+const secs = timeLeft % 60;
+return `${mins}:${String(secs).padStart(2, "0")}`;
+};
 
-        stream.getVideoTracks()[0].onended = () => {
-          addViolation("Camera turned off!", "camera_off");
-          setCameraStatus("Stopped");
-        };
-      })
-      .catch(() => {
-        addViolation("Camera denied!", "camera_denied");
-        setCameraStatus("Denied");
-      });
+useEffect(() => {
+axios
+  .get(`${import.meta.env.VITE_API_URL}/questions/${examId}`)
+  .then((res) => setQuestions(res.data));
 
-    const handleVisibility = () => {
-      if (document.hidden) {
-        addViolation("Tab switching detected!", "tab_switch");
-      }
+navigator.mediaDevices
+  .getUserMedia({ video: true })
+  .then((stream) => {
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+
+    stream.getVideoTracks()[0].onended = () => {
+      addViolation("Camera turned off!", "camera_off");
+      setCameraStatus("Stopped");
     };
+  })
+  .catch(() => {
+    addViolation("Camera denied!", "camera_denied");
+    setCameraStatus("Denied");
+  });
 
-    const handleFullscreen = () => {
-      if (!document.fullscreenElement) {
-        addViolation("Fullscreen exited!", "fullscreen_exit");
-        setLocked(true);
-      }
-    };
+const handleVisibility = () => {
+  if (document.hidden) {
+    addViolation("Tab switching detected!", "tab_switch");
+  }
+};
 
+const handleFullscreen = () => {
+  if (!document.fullscreenElement) {
+    addViolation("Fullscreen exited!", "fullscreen_exit");
+    setLocked(true);
+  }
+};
     const timer = setInterval(() => {
       setTimeLeft((prev) => prev - 1);
     }, 1000);
