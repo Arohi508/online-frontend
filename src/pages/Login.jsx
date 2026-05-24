@@ -30,11 +30,10 @@ function Login() {
   };
 
   const handleSubmit = async () => {
-  const res = await axios.post(
-    `${import.meta.env.VITE_API_URL}/login`,
-    form
-  );
-};
+    const res = await axios.post(
+      `${import.meta.env.VITE_API_URL}/login`,
+      form
+    );
 
     if (res.data.token) {
       localStorage.setItem("token", res.data.token);
@@ -123,6 +122,6 @@ function Login() {
       </div>
     </div>
   );
-
+}
 
 export default Login;

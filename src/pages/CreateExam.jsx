@@ -17,11 +17,10 @@ function CreateExam() {
   };
 
   const handleSubmit = async () => {
-  const res = await axios.post(
-    `${import.meta.env.VITE_API_URL}/create-exam`,
-    form
-  );
-};
+    const res = await axios.post(
+      `${import.meta.env.VITE_API_URL}/create-exam`,
+      form
+    );
 
     alert(res.data.message);
 
@@ -147,7 +146,7 @@ function CreateExam() {
       </div>
     </div>
   );
-
+}
 
 /* 🔥 UPDATED INPUT STYLE */
 const inputStyle = {
