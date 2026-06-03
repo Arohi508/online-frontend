@@ -21,56 +21,76 @@ function ManageQuestions() {
   const [editingId, setEditingId] = useState(null);
 
   const loadQuestions = () => {
-  axios
-    .get(`${import.meta.env.VITE_API_URL}/questions/${examId}`)
-    .then((res) => setQuestions(res.data));
-};
+    axios
+      .get(`${import.meta.env.VITE_API_URL}/questions/${examId}`)
+      .then((res) => setQuestions(res.data));
+  };
 
-useEffect(() => {
-  loadQuestions();
-}, [examId]);
+  useEffect(() => {
+    loadQuestions();
+  }, [examId]);
 
-const handleChange = (e) => {
-  setForm({
-    ...form,
-    [e.target.name]: e.target.value
-  });
-};
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
+    });
+  };
 
-const handleSubmit = async () => {
-  if (editingId) {
-    await axios.put(
-      `${import.meta.env.VITE_API_URL}/update-question/${editingId}`,
+  const handleSubmit = async () => {
+    const token = localStorage.getItem("token");
+
+    if (editingId) {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/update-question/${editingId}`,
+        {
+          examId,
+          ...form
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      setEditingId(null);
+    } else {
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/add-question`,
+        {
+          examId,
+          ...form
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+    }
+
+    setForm(emptyForm);
+    loadQuestions();
+  };
+
+  const deleteQuestion = async (id) => {
+    const ok = window.confirm("Delete question?");
+    if (!ok) return;
+
+    const token = localStorage.getItem("token");
+
+    await axios.delete(
+      `${import.meta.env.VITE_API_URL}/delete-question/${id}`,
       {
-        examId,
-        ...form
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       }
     );
-    setEditingId(null);
-  } else {
-    await axios.post(
-      `${import.meta.env.VITE_API_URL}/add-question`,
-      {
-        examId,
-        ...form
-      }
-    );
-  }
 
-  setForm(emptyForm);
-  loadQuestions();
-};
-
-const deleteQuestion = async (id) => {
-  const ok = window.confirm("Delete question?");
-  if (!ok) return;
-
-  await axios.delete(
-    `${import.meta.env.VITE_API_URL}/delete-question/${id}`
-  );
-
-  loadQuestions();
-};
+    loadQuestions();
+  };
 
   const editQuestion = (q) => {
     setEditingId(q._id);

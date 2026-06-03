@@ -17,16 +17,13 @@ function StudentResults() {
         }
       );
       
-        const sorted = res.data.sort((a, b) => {
-          const priority = {
-            Suspicious: 3,
-            Warning: 2,
-            Clean: 1
-          };
-          return priority[b.status] - priority[a.status];
-        });
+        const sorted = res.data.sort(
+  (a, b) =>
+    new Date(b.createdAt) -
+    new Date(a.createdAt)
+);
 
-        setResults(sorted);
+setResults(sorted);
       } catch (error) {
         console.log(error.response?.data);
         setResults([]);
@@ -129,15 +126,17 @@ function StudentResults() {
                 <th style={th}>Violations</th>
                 <th style={th}>Violation Types</th>
                 <th style={th}>Time Taken</th>
-                <th style={th}>Submitted</th>
-                <th style={th}>Status</th>
+<th style={th}>Submitted</th>
+<th style={th}>Trust Score</th>
+<th style={th}>Risk Level</th>
+<th style={th}>Status</th>
               </tr>
             </thead>
 
             <tbody>
               {results.length === 0 ? (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: "center", padding: "20px" }}>
+                  <td colSpan="10" style={{ textAlign: "center", padding: "20px" }}>
                     No results found
                   </td>
                 </tr>
@@ -172,11 +171,34 @@ function StudentResults() {
                     </td>
 
                     <td style={td}>
-                      {new Date(item.createdAt).toLocaleString()}
-                    </td>
+  {new Date(item.createdAt).toLocaleString()}
+</td>
 
-                    <td style={td}>
-                      <span style={{
+<td style={td}>
+  {item.trustScore ?? 100}
+</td>
+
+<td style={td}>
+  <span
+    style={{
+      padding: "6px 14px",
+      borderRadius: "999px",
+      color: "#fff",
+      fontWeight: "700",
+      background:
+        item.riskLevel === "Low"
+          ? "#22c55e"
+          : item.riskLevel === "Medium"
+          ? "#f59e0b"
+          : "#ef4444"
+    }}
+  >
+    {item.riskLevel || "Low"}
+  </span>
+</td>
+
+<td style={td}>
+  <span style={{
                         padding: "6px 14px",
                         borderRadius: "999px",
                         color: "#fff",

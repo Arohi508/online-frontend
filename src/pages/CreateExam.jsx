@@ -17,18 +17,34 @@ function CreateExam() {
   };
 
   const handleSubmit = async () => {
-    const res = await axios.post(
-      `${import.meta.env.VITE_API_URL}/create-exam`,
-      form
-    );
+    try {
+      const token = localStorage.getItem("token");
 
-    alert(res.data.message);
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/create-exam`,
+        form,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
 
-    setForm({
-      title: "",
-      subject: "",
-      duration: ""
-    });
+      alert(res.data.message);
+
+      setForm({
+        title: "",
+        subject: "",
+        duration: ""
+      });
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        error.response?.data?.message ||
+          "Failed to create exam"
+      );
+    }
   };
 
   return (

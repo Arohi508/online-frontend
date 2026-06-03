@@ -2,10 +2,19 @@ import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import {
+  loadObjectDetector,
+  detectObjects
+} from "../ai/objectDetection";
+import { calculateTrustScore }
+from "../ai/trustScore";
 
 function ExamPage() {
   const navigate = useNavigate();
-  const videoRef = useRef(null);
+const videoRef = useRef(null);
+const streamRef = useRef(null);
+const intervalRef = useRef(null);
+const examEndedRef = useRef(false);
 
   const examId = localStorage.getItem("examId");
   const examTitle =
@@ -23,6 +32,9 @@ function ExamPage() {
   const [warning, setWarning] = useState("");
   const [cameraStatus, setCameraStatus] = useState("Active");
   const [locked, setLocked] = useState(false);
+
+  const [submitted, setSubmitted] = useState(false);
+  const [examEnded, setExamEnded] = useState(false);
 
   const addViolation = (msg, type) => {
     setViolations((prev) => prev + 1);
@@ -58,8 +70,27 @@ function ExamPage() {
   };
 
   const handleSubmit = async () => {
-    try {
+  if (submitted) return;
+
+setSubmitted(true);
+setExamEnded(true);
+examEndedRef.current = true;
+
+  try {
       const score = calculateScore();
+      const {
+  trustScore,
+  riskLevel
+} = calculateTrustScore(
+  violationTypes
+);
+
+console.log("========== TRUST SCORE DEBUG ==========");
+console.log("Violations Count:", violations);
+console.log("Violation Types:", violationTypes);
+console.log("Trust Score:", trustScore);
+console.log("Risk Level:", riskLevel);
+console.log("======================================");
 
       const totalMarks = questions.reduce(
         (sum, q) => sum + (Number(q.marks) || 1),
@@ -85,6 +116,10 @@ function ExamPage() {
     totalMarks,
     violations,
     violationTypes,
+
+    trustScore,
+    riskLevel,
+
     timeTaken: examDuration
   },
   {
@@ -98,7 +133,39 @@ localStorage.setItem("latestScore", score);
 localStorage.setItem("latestTotalMarks", totalMarks);
 localStorage.setItem("latestExamTitle", examTitle);
 
-navigate("/result");
+// Stop AI detection
+if (intervalRef.current) {
+  clearInterval(intervalRef.current);
+  intervalRef.current = null;
+}
+
+// Stop camera completely
+if (streamRef.current) {
+  streamRef.current.getTracks().forEach((track) => {
+    track.stop();
+  });
+}
+
+if (videoRef.current) {
+  videoRef.current.pause();
+  videoRef.current.srcObject = null;
+}
+
+// Force browser to release stream
+streamRef.current = null;
+
+// Exit fullscreen
+if (document.fullscreenElement) {
+  await document.exitFullscreen();
+}
+
+// Give browser time to release camera
+await new Promise((resolve) =>
+  setTimeout(resolve, 1000)
+);
+
+window.location.href = "/result";
+
 } catch (error) {
   console.log("ERROR:", error.response?.data || error.message);
   alert(
@@ -122,14 +189,22 @@ axios
 navigator.mediaDevices
   .getUserMedia({ video: true })
   .then((stream) => {
+    streamRef.current = stream;
     if (videoRef.current) {
       videoRef.current.srcObject = stream;
+      loadObjectDetector().then(() => {
+  intervalRef.current = setInterval(() => {
+    detectObjects(
+      videoRef.current,
+      addViolation
+    );
+  }, 5000);
+});
     }
 
     stream.getVideoTracks()[0].onended = () => {
-      addViolation("Camera turned off!", "camera_off");
-      setCameraStatus("Stopped");
-    };
+  setCameraStatus("Stopped");
+};
   })
   .catch(() => {
     addViolation("Camera denied!", "camera_denied");
@@ -143,8 +218,14 @@ const handleVisibility = () => {
 };
 
 const handleFullscreen = () => {
+  if (examEndedRef.current) return;
+
   if (!document.fullscreenElement) {
-    addViolation("Fullscreen exited!", "fullscreen_exit");
+    addViolation(
+      "Fullscreen exited!",
+      "fullscreen_exit"
+    );
+
     setLocked(true);
   }
 };
@@ -156,10 +237,36 @@ const handleFullscreen = () => {
     document.addEventListener("fullscreenchange", handleFullscreen);
 
     return () => {
-      clearInterval(timer);
-      document.removeEventListener("visibilitychange", handleVisibility);
-      document.removeEventListener("fullscreenchange", handleFullscreen);
-    };
+  clearInterval(timer);
+
+  if (intervalRef.current) {
+  clearInterval(intervalRef.current);
+  intervalRef.current = null;
+}
+
+  if (streamRef.current) {
+    streamRef.current
+      .getTracks()
+      .forEach((track) => track.stop());
+
+    streamRef.current = null;
+  }
+
+  if (videoRef.current) {
+  videoRef.current.pause();
+  videoRef.current.srcObject = null;
+}
+
+  document.removeEventListener(
+    "visibilitychange",
+    handleVisibility
+  );
+
+  document.removeEventListener(
+    "fullscreenchange",
+    handleFullscreen
+  );
+};
   }, [examId]);
 
   useEffect(() => {
