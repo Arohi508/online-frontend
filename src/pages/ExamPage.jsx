@@ -320,36 +320,60 @@ const handleFullscreen = () => {
         </div>
       )}
 
-      <div style={{ padding: "24px 40px" }}>
-        <h1 style={{ color: "var(--text)" }}>
-          {examTitle}
-        </h1>
+      <div
+  style={{
+    padding: "24px 40px",
+    paddingRight: "420px"
+  }}
+>
+       <h1 style={{ color: "var(--text)" }}>
+  {examTitle}
+</h1>
 
-        <p style={{ color: "var(--subtext)" }}>
-          Time Left: {formatTime()}
-        </p>
+<div
+ style={{
+  position: "fixed",
+  right: "30px",
+  top: "120px",
+  width: "340px",
+  zIndex: 999,
+  background: "var(--card)",
+  padding: "16px",
+  borderRadius: "18px",
+  border: "1px solid var(--border)",
+  boxShadow: "var(--shadow)"
+}}
+>
+  <p style={{ color: "var(--subtext)" }}>
+    Time Left: {formatTime()}
+  </p>
 
-        <p style={{ color: "var(--subtext)" }}>
-          Violations: {violations}
-        </p>
+  <p style={{ color: "var(--subtext)" }}>
+    Violations: {violations}
+  </p>
 
-        {warning && (
-          <p style={{ color: "#ef4444" }}>{warning}</p>
-        )}
+  {warning && (
+    <p style={{ color: "#ef4444" }}>
+      {warning}
+    </p>
+  )}
 
-        {/* VIDEO */}
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          width="320"
-          height="220"
-          style={{
-            background: "#000",
-            marginBottom: "20px",
-            borderRadius: "12px"
-          }}
-        />
+  <video
+    ref={videoRef}
+    autoPlay
+    muted
+    width="320"
+    height="220"
+   style={{
+  width: "100%",
+  height: "240px",
+  objectFit: "cover",
+  background: "#000",
+  borderRadius: "14px",
+  marginTop: "12px"
+}}
+  />
+</div>
 
         {/* QUESTIONS */}
         {questions.map((q, index) => (
